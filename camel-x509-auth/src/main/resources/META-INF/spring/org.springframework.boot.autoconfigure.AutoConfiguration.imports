@@ -1,0 +1,2 @@
+com.redhat.camel.springboot.auth.x509.X509SecurityAutoConfiguration
+com.redhat.camel.springboot.auth.x509.X509CamelSecurityAutoConfiguration
