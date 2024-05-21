@@ -30,6 +30,7 @@ public class HttpSslServerRouter extends RouteBuilder {
 				.to("direct:pong");
 
 		from("direct:pong")
+				.policy("authorizationPolicy")
 				.setBody().constant("pong");
 	}
 }
