@@ -4,8 +4,11 @@ import org.apache.camel.component.spring.security.SpringSecurityAccessPolicy;
 import org.apache.camel.component.spring.security.SpringSecurityAuthorizationPolicy;
 import org.apache.camel.spi.AuthorizationPolicy;
 import org.apache.camel.spring.boot.util.ConditionalOnHierarchicalProperties;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ConfigurableApplicationContext;
@@ -17,15 +20,21 @@ import org.springframework.security.access.vote.RoleVoter;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Locale;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Configuration
 @EnableWebSecurity
 @EnableConfigurationProperties(X509SecurityConfigurationProperties.class)
 @ConditionalOnHierarchicalProperties("com.redhat.camel.springboot.auth.x509")
+@ConditionalOnProperty(name = {"com.redhat.camel.springboot.auth.x509.create-policies",
+        "com.redhat.camel.springboot.auth.x509.enabled"}, havingValue = "true")
 @AutoConfigureAfter(X509SecurityAutoConfiguration.class)
 public class X509CamelSecurityAutoConfiguration {
+    private static final Logger LOG = LoggerFactory.getLogger(X509CamelSecurityAutoConfiguration.class);
 
     private final X509SecurityConfigurationProperties properties;
     private final AuthenticationConfiguration authenticationConfiguration;
@@ -44,8 +53,7 @@ public class X509CamelSecurityAutoConfiguration {
         ConfigurableListableBeanFactory beanFactory = ((ConfigurableApplicationContext) applicationContext).getBeanFactory();
 
         Set<String> roles = properties.getUsers().values().stream()
-                .map(rolesString -> rolesString.split(","))
-                .flatMap(list -> Arrays.stream(list))
+                .flatMap(list -> list.stream())
                 .collect(Collectors.toSet());
 
         roles.forEach(role -> {
@@ -57,12 +65,17 @@ public class X509CamelSecurityAutoConfiguration {
             try {
                 policy.setAuthenticationManager(authenticationConfiguration.getAuthenticationManager());
             } catch (Exception e) {
+                LOG.error("Error setting authentication manager", e);
                 throw new RuntimeException(e);
             }
             policy.setAccessDecisionManager(new AffirmativeBased(decisionVoters));
-            policy.setSpringSecurityAccessPolicy(new SpringSecurityAccessPolicy("ROLE_" + role));
+            String accessName = properties.getSpringSecurityRolePrefix() + role;
+            policy.setSpringSecurityAccessPolicy(new SpringSecurityAccessPolicy(accessName));
+            LOG.debug("Created Spring Security Access Policy with access '{}'", accessName);
 
-            beanFactory.registerSingleton(role.toLowerCase(Locale.ROOT) + "Policy", policy);
+            String beanName = role.toLowerCase(Locale.ROOT) + properties.getPolicySuffix();
+            beanFactory.registerSingleton(beanName, policy);
+            LOG.debug("Added policy for role '{}', with name '{}'", role, beanName);
         });
 
         // beans are registered programmatically
