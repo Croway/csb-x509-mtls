@@ -2,23 +2,25 @@ package com.redhat.camel.springboot.auth.x509;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
-import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 @ConfigurationProperties(prefix = "com.redhat.camel.springboot.auth.x509")
 public class X509SecurityConfigurationProperties {
 
     private Boolean enabled = Boolean.FALSE;
-    private final Map<String, List<String>> users = new HashMap<>();
-    private String subjectPrincipalRegex = "CN=(.*?)(?:,|$)";
+    private Map<String, UserCertificate> users;
+    private String subjectPrincipalRegex = "(.*)";
     private String unusedPassword = "unused";
     private String policySuffix = "Policy";
     private String springSecurityRolePrefix = "ROLE_";
     private Boolean createPolicies = Boolean.FALSE;
 
-    public Map<String, List<String>> getUsers() {
+    public Map<String, UserCertificate> getUsers() {
         return users;
+    }
+
+    public void setUsers(Map<String, UserCertificate> users) {
+        this.users = users;
     }
 
     public String getSubjectPrincipalRegex() {

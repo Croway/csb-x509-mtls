@@ -48,11 +48,11 @@ public class X509SecurityAutoConfiguration {
     @Bean
     public UserDetailsService configurableInMemoryUserDetailsService() {
         List<UserDetails> users = new ArrayList<>(properties.getUsers().size());
-        properties.getUsers().forEach((user, roles) -> {
-            String[] rolesArray = roles.stream().map(role -> role.toUpperCase().trim()).toArray(String[]::new);
+        properties.getUsers().forEach((id, userCertificate) -> {
+            String[] rolesArray = userCertificate.getRoles().stream().map(role -> role.toUpperCase().trim()).toArray(String[]::new);
 
-            LOG.debug("Creating user '{}' with roles {}", user, rolesArray);
-            users.add(User.withUsername(user).password(properties.getUnusedPassword()).roles(rolesArray).build());
+            LOG.debug("Creating user '{}' from certificate {} with roles {}", userCertificate.getName(), rolesArray);
+            users.add(User.withUsername(userCertificate.getName()).password(properties.getUnusedPassword()).roles(rolesArray).build());
         });
 
         return new InMemoryUserDetailsManager(users);

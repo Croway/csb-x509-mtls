@@ -20,10 +20,7 @@ import org.springframework.security.access.vote.RoleVoter;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Locale;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Configuration
@@ -53,7 +50,7 @@ public class X509CamelSecurityAutoConfiguration {
         ConfigurableListableBeanFactory beanFactory = ((ConfigurableApplicationContext) applicationContext).getBeanFactory();
 
         Set<String> roles = properties.getUsers().values().stream()
-                .flatMap(list -> list.stream())
+                .flatMap(list -> list.getRoles().stream())
                 .collect(Collectors.toSet());
 
         roles.forEach(role -> {
