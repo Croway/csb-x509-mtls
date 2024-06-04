@@ -14,8 +14,9 @@ public class SSLConfiguration {
 		final SSLContextParameters sslContextParameters = getTrustedSSLContextParameters(password);
 
 		final KeyStoreParameters ksp = new KeyStoreParameters();
-		ksp.setResource("classpath:client.jks");
+		ksp.setResource("classpath:client.p12");
 		ksp.setPassword(password);
+		ksp.setType("PKCS12");
 
 		final KeyManagersParameters kmp = new KeyManagersParameters();
 		kmp.setKeyStore(ksp);
@@ -31,8 +32,9 @@ public class SSLConfiguration {
 		final SSLContextParameters sslContextParameters = new SSLContextParameters();
 
 		final KeyStoreParameters ksp = new KeyStoreParameters();
-		ksp.setResource("classpath:client-truststore.jks");
+		ksp.setResource("classpath:client-truststore.p12");
 		ksp.setPassword(password);
+		ksp.setType("PKCS12");
 
 		final FilterParameters filter = new FilterParameters();
 		filter.getInclude().add(".*");
